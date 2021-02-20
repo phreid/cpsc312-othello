@@ -2,6 +2,8 @@ module Player where
 
 import Othello
 import System.Random
+import Text.Read
+import Data.Maybe
 
 checkForValidMoves :: Board -> Color -> IO Bool
 checkForValidMoves board color = do
@@ -17,12 +19,21 @@ humanPlayer board color = do
         r <- getLine
         putStr "Enter a col: "
         c <- getLine
-        let move = ((read r, read c), color)
-        case doMove board move of
-            Nothing -> do
-                putStrLn "\nNot a valid move. Try again."
+        case (readMaybe r, readMaybe c) of 
+            (Nothing, _) -> do
+                putStrLn "\nInvalid input."
                 humanPlayer board color
-            Just nextBoard -> return $ Just move) else return Nothing 
+            (_, Nothing) -> do
+                putStrLn "\nInvalid input."
+                humanPlayer board color
+            (Just row, Just col) -> do
+                let move = ((row, col), color)
+                case doMove board move of
+                    Nothing -> do
+                        putStrLn "\nNot a valid move. Try again."
+                        humanPlayer board color
+                    Just nextBoard -> return $ Just move) else return Nothing
+            
 
 randomPlayer :: Player
 randomPlayer board color = do
