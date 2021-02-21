@@ -19,17 +19,23 @@ data GameState = Game {
     scoreBlack :: Int
 } | GameOver {board :: Board, winner :: Maybe Color}
 
--- Set the game board size. Set to a small board for now to make game loop
---  testing easier.
+-- Set the game board size.
 maxRow = 7
 maxCol = 7
 midRow = maxRow `div` 2
 midCol = maxCol `div` 2
 
+-- For printing board pieces.
 instance Show Color where
     show White = "W"
     show Black = "B"
 
+--  For printing messages to the user.
+showColor :: Color -> String
+showColor White = "White"
+showColor Black = "Black"
+
+-- Starting board.
 startBoard :: Board
 startBoard = [((midRow, midCol), White),
               ((midRow + 1, midCol + 1), White),
@@ -127,40 +133,30 @@ getValidMoves board color = [move | move <- allMoves, isJust $ doMove board move
 hasValidMoves :: Board -> Color -> Bool
 hasValidMoves board color = getValidMoves board color /= []
 
-nextColor :: Color -> Color
-nextColor White = Black
-nextColor Black = White
-
 -- Apply the given move and produce the next game state. Caller passes in Nothing if
 --  a player has no valid moves available, in which case nextState just switches the current turn.
 --  Otherwise, nextState updates the board and player scores. It's the caller's responsibility to check 
 --  if players have valid moves available and pass either Nothing or a valid move to nextState.
 nextState :: GameState -> Maybe Move -> GameState
 nextState game move
-    | isNothing move = Game
-        (board game)
-        (whitePlayer game)
-        (blackPlayer game)
-        nextPlayer
-        nextTurn
-        (scoreWhite game)
-        (scoreBlack game)
-    | isGameOver nextBoard = GameOver
-        nextBoard
-        (getWinner nextScoreWhite nextScoreBlack)
-    | otherwise = Game
-        nextBoard
-        (whitePlayer game)
-        (blackPlayer game)
-        nextPlayer
-        nextTurn
-        nextScoreWhite
-        nextScoreBlack
+    | isNothing move = game {
+        currentPlayer = nextPlayer,
+        currentTurn = nextTurn }
+    | isGameOver nextBoard = GameOver {
+        board = nextBoard,
+        winner = getWinner nextScoreWhite nextScoreBlack
+    }
+    | otherwise = game {
+        board = nextBoard,
+        currentPlayer = nextPlayer,
+        currentTurn = nextTurn,
+        scoreWhite = nextScoreWhite,
+        scoreBlack = nextScoreBlack }
     where nextBoard = fromJust $ doMove (board game) (fromJust move)
-          nextPlayer = if currentTurn game == White 
+          nextPlayer = if currentTurn game == White
                             then blackPlayer game
                             else whitePlayer game
-          nextTurn = flipColor $ currentTurn game 
+          nextTurn = flipColor $ currentTurn game
           nextScoreWhite = scoreBoard nextBoard White
           nextScoreBlack = scoreBoard nextBoard Black
 

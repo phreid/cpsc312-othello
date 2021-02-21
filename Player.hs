@@ -5,12 +5,15 @@ import System.Random
 import Text.Read
 import Data.Maybe
 
+-- Produce true if the given color has any valid moves on the 
+--  given board, false otherwise.
 checkForValidMoves :: Board -> Color -> IO Bool
 checkForValidMoves board color = do
     if hasValidMoves board color then return True else (do
-        putStrLn $ show color ++ " has no valid moves."
+        putStrLn $ showColor color ++ " has no valid moves."
         return False)
 
+-- A human player. Asks the user for input from the console.
 humanPlayer :: Player
 humanPlayer board color = do
     hasValid <- checkForValidMoves board color
@@ -32,9 +35,10 @@ humanPlayer board color = do
                     Nothing -> do
                         putStrLn "\nNot a valid move. Try again."
                         humanPlayer board color
-                    Just nextBoard -> return $ Just move) else return Nothing
+                    Just nextBoard -> return $ Just move) 
+    else return Nothing
             
-
+-- A random player. Randomly chooses from the list of available moves.
 randomPlayer :: Player
 randomPlayer board color = do
     hasValid <- checkForValidMoves board color
@@ -43,4 +47,5 @@ randomPlayer board color = do
         let moves = getValidMoves board color
         let (choice, _) = randomR (0, length moves - 1) gen
         let move = moves !! choice
-        return $ Just move) else return Nothing 
+        return $ Just move) 
+    else return Nothing 
