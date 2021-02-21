@@ -144,8 +144,7 @@ nextState game move
         currentTurn = nextTurn }
     | isGameOver nextBoard = GameOver {
         board = nextBoard,
-        winner = getWinner nextScoreWhite nextScoreBlack
-    }
+        winner = getWinner nextScoreWhite nextScoreBlack }
     | otherwise = game {
         board = nextBoard,
         currentPlayer = nextPlayer,
