@@ -173,9 +173,13 @@ aiDecision board color = possibleMoves !! indexOfGreatestValue
 -- Maximum score it could possibly attain
 -- If a possible move includes a corner position, more weight/value added 
 getMoveMaxVal :: [(Move, [Board])] -> Color -> [(Move, Int)]
-getMoveMaxVal moveB color = [if x == ((0,7), color) || x == ((7,0), color) || x == ((0,0),color) || x == ((7,7),color)
-  then (x, (getMaximumVal y color)+10) 
-  else (x, getMaximumVal y color) | (x, y) <- moveB]
+getMoveMaxVal moveB color = [if x  `elem` badMoves then (x, (getMaximumVal y color)-10) 
+  else (x, getMaximumVal y color) | (x, y) <- moveB, 
+  let corner = [((0,7), color),((7,0), color),((0,0),color),((7,7),color)],
+  let badMoves = [((1,0), color),((1,1), color),((0,1),color),
+                  ((1,7),color),((1,6),color),((0,6),color),
+                  ((6,7),color),((7,6),color),((6,6),color),
+                  ((6,0),color),((6,1),color),((7,1),color)]]
 
 -- For each set of boards, calculate the value and return the maximum
 getMaximumVal :: [Board] -> Color -> Int 
@@ -189,7 +193,7 @@ moveBoardList board color = [finalBoardState x ((:[]) board) color 1 | x <- getV
 finalBoardState :: Move -> [Board] -> Color -> Int -> (Move, [Board])
 finalBoardState move boards color depth
   | depth == 1 = finalBoardState move allBoards color (depth + 1)
-  | depth == 4 = (move, allBoards)
+  | depth == 3 = (move, allBoards)
   | otherwise = finalBoardState move allBoards color (depth + 1)
     where allBoards = getAllBoards boards color depth 
 
