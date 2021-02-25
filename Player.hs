@@ -178,7 +178,7 @@ netScore :: Board -> Color -> Int
 netScore board color = scoreBoard board color - scoreBoard board (flipColor color)
 
 evaluate :: Board -> Color -> Int
-evaluate board color = 5 * numCorners + 2 * numMoves + netScore board color
+evaluate board color = 20 * numCorners + 5 * numMoves + netScore board color
     where numCorners = length $ filter (corner color) board
           corner color ((row, col), clr) =
             color == clr &&
