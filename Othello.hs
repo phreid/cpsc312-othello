@@ -170,8 +170,12 @@ aiDecision board color = possibleMoves !! indexOfGreatestValue
         possibleMoves = map fst (getMoveMaxVal moveAndValues color)
         indexOfGreatestValue = maxIndex (map snd (getMoveMaxVal moveAndValues color))
 
+-- Maximum score it could possibly attain
+-- If a possible move includes a corner position, more weight/value added 
 getMoveMaxVal :: [(Move, [Board])] -> Color -> [(Move, Int)]
-getMoveMaxVal moveB color = [(x, getMaximumVal y color)| (x, y) <- moveB]
+getMoveMaxVal moveB color = [if x == ((0,7), color) || x == ((7,0), color) || x == ((0,0),color) || x == ((7,7),color)
+  then (x, (getMaximumVal y color)+10) 
+  else (x, getMaximumVal y color) | (x, y) <- moveB]
 
 -- For each set of boards, calculate the value and return the maximum
 getMaximumVal :: [Board] -> Color -> Int 
