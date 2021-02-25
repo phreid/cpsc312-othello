@@ -13,7 +13,7 @@ humanPlayer board color = do
         r <- getLine
         putStr "Enter a col: "
         c <- getLine
-        case (readMaybe r, readMaybe c) of 
+        case (readMaybe r, readMaybe c) of
             (Nothing, _) -> do
                 putStrLn "\nInvalid input."
                 humanPlayer board color
@@ -26,9 +26,9 @@ humanPlayer board color = do
                     Nothing -> do
                         putStrLn "\nNot a valid move. Try again."
                         humanPlayer board color
-                    Just nextBoard -> return $ Just move) 
+                    Just nextBoard -> return $ Just move)
     else return Nothing
-            
+
 -- A random player. Randomly chooses from the list of available moves.
 randomPlayer :: Player
 randomPlayer board color = do
@@ -37,12 +37,12 @@ randomPlayer board color = do
         let moves = getValidMoves board color
         let (choice, _) = randomR (0, length moves - 1) gen
         let move = moves !! choice
-        return $ Just move) 
-    else return Nothing 
+        return $ Just move)
+    else return Nothing
 
 -- A moderate player. Picks the best move at the time based off weighted moves.
 heuristicPlayer :: Player
-heuristicPlayer board color = do 
+heuristicPlayer board color = do
     if hasValidMoves board color then (do
         let move = heuristicPlayerDecision board color
         return $ Just move
@@ -51,7 +51,7 @@ heuristicPlayer board color = do
 
 -- gets the best move at the current point in time
 heuristicPlayerDecision :: Board -> Color -> Move
-heuristicPlayerDecision board color = (getValidMoves board color) !! indexOfGreatestValue
+heuristicPlayerDecision board color = getValidMoves board color !! indexOfGreatestValue
   where indexOfGreatestValue = maxIndex (map fst (valueMoveTuple board color))
 
 -- Taken from stackoverflow
@@ -63,41 +63,30 @@ valueMoveTuple :: Board -> Color -> [(Int, Move)]
 valueMoveTuple board color =
   [( 1 + flippedVal + currentVal + bonusCornerVal, moves)| moves <- getValidMoves board color,
      let flippedVal = length(getFlipped board moves),
-     let currentVal = scoreBoard board color, 
+     let currentVal = scoreBoard board color,
      let bonusCornerVal = cornerVal moves]
 
-isCorner :: Move -> Bool 
-isCorner move 
+isCorner :: Move -> Bool
+isCorner move
     | fst move == (0,0) = True
     | fst move == (0,7) = True
     | fst move == (7,0) = True
     | fst move == (7,7) = True
-    | otherwise = False 
+    | otherwise = False
 
 cornerVal :: Move -> Int
-cornerVal move 
+cornerVal move
     | isCorner move = 50
     | otherwise = 0
 
--- Maximum score it could possibly attain
--- If a possible move includes a corner position, more weight/value added 
-getMoveMaxVal :: [(Move, [Board])] -> Color -> [(Move, Int)]
-getMoveMaxVal moveB color = [if x  `elem` badMoves then (x, (getMaximumVal y color)-10) 
-  else (x, getMaximumVal y color) | (x, y) <- moveB, 
-  let corner = [((0,7), color),((7,0), color),((0,0),color),((7,7),color)],
-  let badMoves = [((1,0), color),((1,1), color),((0,1),color),
-                  ((1,7),color),((1,6),color),((0,6),color),
-                  ((6,7),color),((7,6),color),((6,6),color),
-                  ((6,0),color),((6,1),color),((7,1),color)]]
-
 -- For each set of boards, calculate the value and return the maximum
-getMaximumVal :: [Board] -> Color -> Int 
+getMaximumVal :: [Board] -> Color -> Int
 getMaximumVal boards color = maximum [scoreBoard b color | b <- boards]
 
 -- AI player. Chooses the best move out of the available moves, looking 5 moves ahead
 lookaheadPlayer :: Player
-lookaheadPlayer board color = do 
-    if hasValidMoves board color then (do 
+lookaheadPlayer board color = do
+    if hasValidMoves board color then (do
         let move = lookaheadDecision board color
         return $ Just move)
     else return Nothing
@@ -110,6 +99,17 @@ lookaheadDecision board color = possibleMoves !! indexOfGreatestValue
         possibleMoves = map fst (getMoveMaxVal moveAndValues color)
         indexOfGreatestValue = maxIndex (map snd (getMoveMaxVal moveAndValues color))
 
+-- Maximum score it could possibly attain
+-- If a possible move includes a corner position, more weight/value added 
+getMoveMaxVal :: [(Move, [Board])] -> Color -> [(Move, Int)]
+getMoveMaxVal moveB color = [if x  `elem` badMoves then (x, (getMaximumVal y color)-10)
+  else (x, getMaximumVal y color) | (x, y) <- moveB,
+  let corner = [((0,7), color),((7,0), color),((0,0),color),((7,7),color)],
+  let badMoves = [((1,0), color),((1,1), color),((0,1),color),
+                  ((1,7),color),((1,6),color),((0,6),color),
+                  ((6,7),color),((7,6),color),((6,6),color),
+                  ((6,0),color),((6,1),color),((7,1),color)]]
+
 -- Returns a list of all the possible board states per move
 moveBoardList :: Board -> Color -> [(Move, [Board])]
 moveBoardList board color = [finalBoardState x ((:[]) board) color 1 | x <- getValidMoves board color]
@@ -120,22 +120,22 @@ finalBoardState move boards color depth
   | depth == 1 = finalBoardState move allBoards color (depth + 1)
   | depth == 3 = (move, allBoards)
   | otherwise = finalBoardState move allBoards color (depth + 1)
-    where allBoards = getAllBoards boards color depth 
+    where allBoards = getAllBoards boards color depth
 
 -- For each board in the list, I want to get the next possible boards
 -- Changes color accordingly 
 getAllBoards :: [Board] -> Color -> Int -> [Board]
-getAllBoards boards color depth = concat ((map (\x -> nextGameBoards x colorMove)) boards) 
-    where colorMove        
-            | depth `mod` 2 == 0 && color == White = Black 
-            | depth  `mod` 2 == 0 && color == Black = White 
-            | depth `mod` 2 /= 0 && color == Black = Black 
+getAllBoards boards color depth = concat ((map (\x -> nextGameBoards x colorMove)) boards)
+    where colorMove
+            | depth `mod` 2 == 0 && color == White = Black
+            | depth  `mod` 2 == 0 && color == Black = White
+            | depth `mod` 2 /= 0 && color == Black = Black
             | otherwise = White
 
 -- This returns a list of boards that are possible after each valid move is made
 -- If there are no valid moves, the original board is returned
 nextGameBoards :: Board -> Color -> [Board]
-nextGameBoards board color = if hasValidMoves board color 
+nextGameBoards board color = if hasValidMoves board color
   then [fromJust $ doMove board y | y <- (getValidMoves board color)]
   else (:[]) board
 
@@ -145,3 +145,53 @@ nextGameBoards board color = if hasValidMoves board color
 -- miniMaxDecision :: Board -> Color -> Move
 -- miniMaxDecision board color = (getValidMoves board color) !! indexOfGreatestValue
 --   where indexOfGreatestValue = maxIndex (map fst (valueMoveTuple board color))
+
+-- argmax from class
+argmax :: Ord v => (e -> v) -> [e] -> (e,v)
+argmax f [e] = (e, f e)
+argmax f (h:t)
+   | fh > ft = (h,fh)
+   | otherwise = (bt, ft)
+   where
+      (bt,ft) = argmax f t
+      fh = f h
+
+-- A minimax player
+minimaxPlayer :: Player
+minimaxPlayer board color = do
+    return $ chooseMinimax board color 3
+
+chooseMinimax :: Board -> Color -> Int -> Maybe Move
+chooseMinimax board color maxDepth =
+    if hasValidMoves board color then
+        Just $ fst $ argmax
+            (\move -> minimax (fromJust $ doMove board move) color maxDepth)
+            (getValidMoves board color)
+    else Nothing
+
+minimax :: Board -> Color -> Int -> Int
+minimax board color depth
+    | isGameOver board = if won then 1000 else -1000
+    | depth == 0 = evaluate board color
+    | otherwise = if nextTurn /= color then -value else value
+    where won = netScore board color > 0
+          nextTurn = if hasValidMoves board (flipColor color)
+                     then flipColor color
+                     else color
+          value = maximum $
+                    map (\move -> minimax (fromJust $ doMove board move) nextTurn (depth-1))
+                        (getValidMoves board nextTurn)
+
+netScore :: Board -> Color -> Int
+netScore board color = scoreBoard board color - scoreBoard board (flipColor color)
+
+evaluate :: Board -> Color -> Int
+evaluate board color = 5 * numCorners + 2 * numMoves + netScore board color
+    where numCorners = length $ filter (corner color) board
+          corner color ((row, col), clr) =
+            color == clr &&
+             ((row, col) == (0, 0) ||
+              (row, col) == (0, maxCol) ||
+              (row, col) == (maxRow, 0) ||
+              (row, col) == (maxRow, maxCol))
+          numMoves = length $ getValidMoves board color

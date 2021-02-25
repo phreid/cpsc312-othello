@@ -13,28 +13,66 @@ startState :: GameState
 startState = Game startBoard humanPlayer humanPlayer humanPlayer Black 0 0
 
 -- Start menu. If the user chooses a human vs. AI game, human player always plays Black.
-setup :: IO GameState
+setup :: IO (Maybe GameState)
 setup = do
     putStrLn "What type of game would you like to play? (or 9 to quit)\n"
     putStrLn "\t 1. Human vs. Human"
     putStrLn "\t 2. Human vs. Random AI"
-    putStrLn "\t 3. Human vs. Moderate AI"
-    putStrLn "\t 4. Human vs. Minimax AI"
-    putStrLn "\t 5. AI vs. AI\n"
+    putStrLn "\t 3. Human vs. Heuristic AI"
+    putStrLn "\t 4. Human vs. Heuristic AI with Lookahead"
+    putStrLn "\t 5. Human vs. Minimax AI"
+    putStrLn "\t 6. AI vs. AI Tournament\n"
     putStr "Your choice: "
     line <- getLine
     case readMaybe line of
-        Just 1 -> return startState
-        Just 2 -> return startState { whitePlayer = randomPlayer, blackPlayer = humanPlayer }
-        Just 3 -> return startState { whitePlayer = moderatePlayer, blackPlayer = humanPlayer }
-        Just 4 -> return startState {whitePlayer = aiPlayer, blackPlayer = humanPlayer}
-        Just 5 -> return startState { whitePlayer = aiPlayer, 
+        Just 1 -> return $ Just startState
+        Just 2 -> return $ Just startState { whitePlayer = randomPlayer, blackPlayer = humanPlayer }
+        Just 3 -> return $ Just startState { whitePlayer = heuristicPlayer, blackPlayer = humanPlayer }
+        Just 4 -> return $ Just startState { whitePlayer = lookaheadPlayer, blackPlayer = humanPlayer }
+        Just 5 -> return $ Just startState { whitePlayer = lookaheadPlayer, 
                                       blackPlayer = randomPlayer, 
                                       currentPlayer = randomPlayer }
+        Just 6 -> do
+            setupTournament
+            return Nothing
         Just 9 -> exitSuccess
         _ -> do
             putStrLn "\nInvalid choice.\n"
             setup
+
+-- Prompt the user to set up an AI tournament, then play the tournament
+setupTournament :: IO ()
+setupTournament = do
+    putStr "\nEnter the number of games to play (warning: 5+ games can be slow): "
+    numGames <- getLine
+    case readMaybe numGames of
+        Just n -> do
+            black <- chooseAI "Black"
+            white <- chooseAI "White"
+            let gameState = startState {whitePlayer = white, blackPlayer = black, currentPlayer = black}
+            putStrLn "\nPlaying tournament..."
+            playTournament $ Tournament gameState gameState n 0 0 0
+        Nothing -> do
+            putStrLn "\nInvalid input."
+            setupTournament
+
+chooseAI :: String -> IO Player
+chooseAI color = do
+    putStrLn $ "\nChoose an AI for: " ++ color
+    putStrLn "\t 1. Random (fastest)"
+    putStrLn "\t 2. Heuristic"
+    putStrLn "\t 3. Heuristic with Lookahead"
+    putStrLn "\t 4. Minimax (slowest)"
+    putStr "\nYour choice: "
+    line <- getLine
+    case readMaybe line of
+        Just 1 -> return randomPlayer
+        Just 2 -> return heuristicPlayer
+        Just 3 -> return lookaheadPlayer
+        Just 4 -> return minimaxPlayer
+        _ -> do
+            putStrLn "\nInvalid choice.\n"
+            chooseAI color
 
 -- Print a board to the console.
 printBoard :: Board -> IO ()
@@ -96,4 +134,8 @@ main :: IO ()
 main = do
         putStrLn "\nWelcome to Othello\n"
         state <- setup
-        play state
+        case state of 
+            Just state -> do
+                play state
+            Nothing ->
+                return ()
