@@ -159,6 +159,52 @@ nextState game move
           nextScoreWhite = scoreBoard nextBoard White
           nextScoreBlack = scoreBoard nextBoard Black
 
+-- Taken from stackoverflow
+maxIndex xs = head $ filter ((== maximum xs) . (xs !!)) [0..]
+
+-- Returns the best move, looking 5 turns ahead
+-- Assumes that there is always a valid move when this is called
+aiDecision :: Board -> Color -> Move
+aiDecision board color = possibleMoves !! indexOfGreatestValue
+  where moveAndValues = moveBoardList board color
+        possibleMoves = map fst (getMoveMaxVal moveAndValues color)
+        indexOfGreatestValue = maxIndex (map snd (getMoveMaxVal moveAndValues color))
+
+getMoveMaxVal :: [(Move, [Board])] -> Color -> [(Move, Int)]
+getMoveMaxVal moveB color = [(x, getMaximumVal y color)| (x, y) <- moveB]
+
+-- For each set of boards, calculate the value and return the maximum
+getMaximumVal :: [Board] -> Color -> Int 
+getMaximumVal boards color = maximum [scoreBoard b color | b <- boards]
+
+-- Returns a list of all the possible board states per move
+moveBoardList :: Board -> Color -> [(Move, [Board])]
+moveBoardList board color = [finalBoardState x ((:[]) board) color 1 | x <- getValidMoves board color]
+
+-- This gives us all the possible boards, looking 5 turns ahead
+finalBoardState :: Move -> [Board] -> Color -> Int -> (Move, [Board])
+finalBoardState move boards color depth
+  | depth == 1 = finalBoardState move allBoards color (depth + 1)
+  | depth == 4 = (move, allBoards)
+  | otherwise = finalBoardState move allBoards color (depth + 1)
+    where allBoards = getAllBoards boards color depth 
+
+-- For each board in the list, I want to get the next possible boards
+-- Changes color accordingly 
+getAllBoards :: [Board] -> Color -> Int -> [Board]
+getAllBoards boards color depth = concat ((map (\x -> nextGameBoards x colorMove)) boards) where colorMove        
+                                                                                                  | depth `mod` 2 == 0 && color == White = Black 
+                                                                                                  | depth  `mod` 2 == 0 && color == Black = White 
+                                                                                                  | depth `mod` 2 /= 0 && color == Black = Black 
+                                                                                                  | otherwise = White
+
+-- This returns a list of boards that are possible after each valid move is made
+-- If there are no valid moves, the original board is returned
+nextGameBoards :: Board -> Color -> [Board]
+nextGameBoards board color = if hasValidMoves board color 
+  then [fromJust $ doMove board y | y <- (getValidMoves board color)]
+  else (:[]) board
+
 -- Produces true if neither color has a valid move i.e. the game is over
 isGameOver :: Board -> Bool
 isGameOver board = not $ hasValidMoves board White || hasValidMoves board Black

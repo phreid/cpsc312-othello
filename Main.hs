@@ -25,7 +25,7 @@ setup = do
     case readMaybe line of
         Just 1 -> return startState
         Just 2 -> return startState { whitePlayer = randomPlayer, blackPlayer = humanPlayer }
-        Just 3 -> undefined
+        Just 3 -> return startState {whitePlayer = aiPlayer, blackPlayer = humanPlayer}}
         Just 4 -> return startState { whitePlayer = randomPlayer, 
                                       blackPlayer = randomPlayer, 
                                       currentPlayer = randomPlayer }
