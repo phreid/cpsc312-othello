@@ -29,9 +29,9 @@ setup = do
         Just 2 -> return $ Just startState { whitePlayer = randomPlayer, blackPlayer = humanPlayer }
         Just 3 -> return $ Just startState { whitePlayer = heuristicPlayer, blackPlayer = humanPlayer }
         Just 4 -> return $ Just startState { whitePlayer = lookaheadPlayer, blackPlayer = humanPlayer }
-        Just 5 -> return $ Just startState { whitePlayer = lookaheadPlayer, 
-                                      blackPlayer = minimaxPlayer, 
-                                      currentPlayer = minimaxPlayer
+        Just 5 -> return $ Just startState { whitePlayer = minimaxPlayer, 
+                                      blackPlayer = humanPlayer, 
+                                      currentPlayer = humanPlayer
                                        }
         Just 6 -> do
             setupTournament
