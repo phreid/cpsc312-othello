@@ -205,6 +205,38 @@ nextGameBoards board color = if hasValidMoves board color
   then [fromJust $ doMove board y | y <- (getValidMoves board color)]
   else (:[]) board
 
+-- Returns the move that will give the greatest value
+-- Assumes that there is always a valid move when this is called
+miniMaxDecision :: Board -> Color -> Move
+miniMaxDecision board color = (getValidMoves board color) !! indexOfGreatestValue
+  where indexOfGreatestValue = maxIndex (map fst (valueMoveTuple board color))
+
+-- Calculates the score for each valid move 
+valueMoveTuple :: Board -> Color -> [(Int, Move)]
+valueMoveTuple board color =
+  [( 1 + flippedVal + currentVal + bonusCornerVal, moves)| moves <- getValidMoves board color,
+     let flippedVal = length(getFlipped board moves),
+     let currentVal = scoreBoard board color, 
+     let bonusCornerVal = cornerVal moves]
+
+isCorner :: Move -> Bool 
+isCorner move 
+    | fst move == (0,0) = True
+    | fst move == (0,7) = True
+    | fst move == (7,0) = True
+    | fst move == (7,7) = True
+    | otherwise = False 
+
+cornerVal :: Move -> Int
+cornerVal move 
+    | isCorner move = 50
+    | otherwise = 0
+
+-- gets the best move at the current point in time
+moderatePlayerDecision :: Board -> Color -> Move
+moderatePlayerDecision board color = (getValidMoves board color) !! indexOfGreatestValue
+  where indexOfGreatestValue = maxIndex (map fst (valueMoveTuple board color))
+
 -- Produces true if neither color has a valid move i.e. the game is over
 isGameOver :: Board -> Bool
 isGameOver board = not $ hasValidMoves board White || hasValidMoves board Black

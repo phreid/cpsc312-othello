@@ -40,6 +40,15 @@ randomPlayer board color = do
         return $ Just move) 
     else return Nothing 
 
+-- A moderate player. Picks the best move at the time based off weighted moves.
+moderatePlayer :: Player
+moderatePlayer board color = do 
+    if hasValidMoves board color then (do
+        let move = moderatePlayerDecision board color
+        return $ Just move
+        )
+    else return Nothing
+
 -- AI player. Chooses the best move out of the available moves, looking 5 moves ahead
 aiPlayer :: Player
 aiPlayer board color = do 

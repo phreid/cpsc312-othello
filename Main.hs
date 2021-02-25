@@ -18,15 +18,17 @@ setup = do
     putStrLn "What type of game would you like to play? (or 9 to quit)\n"
     putStrLn "\t 1. Human vs. Human"
     putStrLn "\t 2. Human vs. Random AI"
-    putStrLn "\t 3. Human vs. Minimax AI"
-    putStrLn "\t 4. AI vs. AI\n"
+    putStrLn "\t 3. Human vs. Moderate AI"
+    putStrLn "\t 4. Human vs. Minimax AI"
+    putStrLn "\t 5. AI vs. AI\n"
     putStr "Your choice: "
     line <- getLine
     case readMaybe line of
         Just 1 -> return startState
         Just 2 -> return startState { whitePlayer = randomPlayer, blackPlayer = humanPlayer }
-        Just 3 -> return startState {whitePlayer = aiPlayer, blackPlayer = humanPlayer}
-        Just 4 -> return startState { whitePlayer = aiPlayer, 
+        Just 3 -> return startState { whitePlayer = moderatePlayer, blackPlayer = humanPlayer }
+        Just 4 -> return startState {whitePlayer = aiPlayer, blackPlayer = humanPlayer}
+        Just 5 -> return startState { whitePlayer = aiPlayer, 
                                       blackPlayer = randomPlayer, 
                                       currentPlayer = randomPlayer }
         Just 9 -> exitSuccess
