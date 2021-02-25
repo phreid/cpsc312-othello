@@ -117,18 +117,6 @@ playTournament tment@Tournament{game =
     let tournamentState = nextTournamentState tment gameState
     playTournament tournamentState
 
-testTment :: TournamentState
-testTment = Tournament {game = startState { whitePlayer = randomPlayer, 
-                                      blackPlayer = randomPlayer, 
-                                      currentPlayer = randomPlayer },
-                             startGame = startState { whitePlayer = randomPlayer, 
-                                      blackPlayer = randomPlayer, 
-                                      currentPlayer = randomPlayer },
-                             gamesLeft = 10,
-                             blackWon = 0,
-                             whiteWon = 0,
-                             ties = 0}
-
 -- Program entry point.
 main :: IO ()
 main = do
