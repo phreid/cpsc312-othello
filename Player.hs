@@ -43,5 +43,7 @@ randomPlayer board color = do
 -- AI player. Chooses the best move out of the available moves, looking 5 moves ahead
 aiPlayer :: Player
 aiPlayer board color = do 
-    hasValid <- checkForValidMoves board color 
-    if hasValid then return $ Just (aiDecision board color) else return Nothing
+    if hasValidMoves board color then (do 
+        let move = aiDecision board color
+        return $ Just move)
+    else return Nothing
