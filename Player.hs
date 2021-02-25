@@ -83,7 +83,7 @@ cornerVal move
 getMaximumVal :: [Board] -> Color -> Int
 getMaximumVal boards color = maximum [scoreBoard b color | b <- boards]
 
--- AI player. Chooses the best move out of the available moves, looking 5 moves ahead
+-- AI player. Chooses the best move out of the available moves, looking 3 moves ahead
 lookaheadPlayer :: Player
 lookaheadPlayer board color = do
     if hasValidMoves board color then (do
@@ -91,7 +91,7 @@ lookaheadPlayer board color = do
         return $ Just move)
     else return Nothing
 
--- Returns the best move, looking 5 turns ahead
+-- Returns the best move, looking 3 turns ahead
 -- Assumes that there is always a valid move when this is called
 lookaheadDecision :: Board -> Color -> Move
 lookaheadDecision board color = possibleMoves !! indexOfGreatestValue
@@ -104,11 +104,10 @@ lookaheadDecision board color = possibleMoves !! indexOfGreatestValue
 getMoveMaxVal :: [(Move, [Board])] -> Color -> [(Move, Int)]
 getMoveMaxVal moveB color = [if x  `elem` badMoves then (x, (getMaximumVal y color)-10)
   else (x, getMaximumVal y color) | (x, y) <- moveB,
-  let corner = [((0,7), color),((7,0), color),((0,0),color),((7,7),color)],
   let badMoves = [((1,0), color),((1,1), color),((0,1),color),
-                  ((1,7),color),((1,6),color),((0,6),color),
-                  ((6,7),color),((7,6),color),((6,6),color),
-                  ((6,0),color),((6,1),color),((7,1),color)]]
+                  ((1,maxCol),color),((1,6),color),((0,6),color),
+                  ((6,maxCol),color),((maxRow,6),color),((6,6),color),
+                  ((6,0),color),((6,1),color),((maxRow,1),color)]]
 
 -- Returns a list of all the possible board states per move
 moveBoardList :: Board -> Color -> [(Move, [Board])]
@@ -138,13 +137,6 @@ nextGameBoards :: Board -> Color -> [Board]
 nextGameBoards board color = if hasValidMoves board color
   then [fromJust $ doMove board y | y <- (getValidMoves board color)]
   else (:[]) board
-
--- Returns the move that will give the greatest value
--- Assumes that there is always a valid move when this is called
--- TODO: is this ever called?
--- miniMaxDecision :: Board -> Color -> Move
--- miniMaxDecision board color = (getValidMoves board color) !! indexOfGreatestValue
---   where indexOfGreatestValue = maxIndex (map fst (valueMoveTuple board color))
 
 -- argmax from class
 argmax :: Ord v => (e -> v) -> [e] -> (e,v)

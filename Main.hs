@@ -30,8 +30,9 @@ setup = do
         Just 3 -> return $ Just startState { whitePlayer = heuristicPlayer, blackPlayer = humanPlayer }
         Just 4 -> return $ Just startState { whitePlayer = lookaheadPlayer, blackPlayer = humanPlayer }
         Just 5 -> return $ Just startState { whitePlayer = lookaheadPlayer, 
-                                      blackPlayer = randomPlayer, 
-                                      currentPlayer = randomPlayer }
+                                      blackPlayer = minimaxPlayer, 
+                                      currentPlayer = minimaxPlayer
+                                       }
         Just 6 -> do
             setupTournament
             return Nothing
@@ -47,9 +48,8 @@ setupTournament = do
     numGames <- getLine
     case readMaybe numGames of
         Just n -> do
-            black <- chooseAI "Black"
             white <- chooseAI "White"
-            let gameState = startState {whitePlayer = white, blackPlayer = black, currentPlayer = black}
+            let gameState = startState {whitePlayer = white, blackPlayer = randomPlayer, currentPlayer = randomPlayer}
             putStrLn "\nPlaying tournament..."
             playTournament $ Tournament gameState gameState n 0 0 0
         Nothing -> do
