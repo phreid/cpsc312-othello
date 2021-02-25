@@ -11,6 +11,9 @@ data TournamentState = Tournament {
     ties :: Int
 } | TournamentOver {blackWon :: Int, whiteWon :: Int, ties :: Int}
 
+-- Given the next game state, produces the next tournament state. If the game is over, 
+--  updates the win/loss records and starts a new game until the number of games 
+--  left in the tournament is zero.
 nextTournamentState :: TournamentState -> GameState -> TournamentState
 nextTournamentState Tournament{gamesLeft = 0, blackWon = bw, whiteWon = ww, ties = t} _ = 
     TournamentOver{blackWon = bw, whiteWon = ww, ties = t}
