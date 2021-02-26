@@ -148,7 +148,7 @@ nextGameBoards board color = if hasValidMoves board color
   then [fromJust $ doMove board y | y <- (getValidMoves board color)]
   else (:[]) board
 
--- argmax from class
+-- argmax function taken from class
 argmax :: Ord v => (e -> v) -> [e] -> (e,v)
 argmax f [e] = (e, f e)
 argmax f (h:t)
@@ -158,7 +158,8 @@ argmax f (h:t)
       (bt,ft) = argmax f t
       fh = f h
 
--- A minimax player
+-- A minimax player. The game tree for Othello grows fast,
+--  so can't search very deep.
 minimaxPlayer :: Player
 minimaxPlayer board color = do
     return $ chooseMinimax board color 3
@@ -171,6 +172,9 @@ chooseMinimax board color maxDepth =
             (getValidMoves board color)
     else Nothing
 
+-- Produces the minimax value. One difference from standard minimax is that
+--  in Othello it's possible for a player to have two or more moves in a row
+--  if the opposing player has no valid moves. 
 minimax :: Board -> Color -> Int -> Int
 minimax board color depth
     | isGameOver board = if won then 1000 else -1000
@@ -184,11 +188,14 @@ minimax board color depth
                     map (\move -> minimax (fromJust $ doMove board move) nextTurn (depth-1))
                         (getValidMoves board nextTurn)
 
-netScore :: Board -> Color -> Int
-netScore board color = scoreBoard board color - scoreBoard board (flipColor color)
 
+
+-- Board evaluation function for minimax. Gives high weight to moves in the corner,
+--  and also prefers boards where the player has lots of available moves. Also takes
+--  into account the player's net score (number of pieces - number of opposing pieces),
+--  but this is de-emphasized as it's not a major part of Othello strategy.
 evaluate :: Board -> Color -> Int
-evaluate board color = 5 * numCorners + 2 * numMoves + netScore board color
+evaluate board color = 20 * numCorners + 5 * numMoves + netScore board color
     where numCorners = length $ filter (corner color) board
           corner color ((row, col), clr) =
             color == clr &&
@@ -197,3 +204,6 @@ evaluate board color = 5 * numCorners + 2 * numMoves + netScore board color
               (row, col) == (maxRow, 0) ||
               (row, col) == (maxRow, maxCol))
           numMoves = length $ getValidMoves board color
+
+netScore :: Board -> Color -> Int
+netScore board color = scoreBoard board color - scoreBoard board (flipColor color)
