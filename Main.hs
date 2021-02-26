@@ -13,26 +13,91 @@ startState :: GameState
 startState = Game startBoard humanPlayer humanPlayer humanPlayer Black 0 0
 
 -- Start menu. If the user chooses a human vs. AI game, human player always plays Black.
-setup :: IO GameState
+setup :: IO (Maybe GameState)
 setup = do
     putStrLn "What type of game would you like to play? (or 9 to quit)\n"
     putStrLn "\t 1. Human vs. Human"
     putStrLn "\t 2. Human vs. Random AI"
-    putStrLn "\t 3. Human vs. Minimax AI"
-    putStrLn "\t 4. AI vs. AI\n"
+    putStrLn "\t 3. Human vs. Heuristic AI"
+    putStrLn "\t 4. Human vs. Heuristic AI with Lookahead"
+    putStrLn "\t 5. Human vs. Minimax AI"
+    putStrLn "\t 6. AI Benchmark\n"
     putStr "Your choice: "
     line <- getLine
     case readMaybe line of
-        Just 1 -> return startState
-        Just 2 -> return startState { whitePlayer = randomPlayer, blackPlayer = humanPlayer }
-        Just 3 -> undefined
-        Just 4 -> return startState { whitePlayer = randomPlayer, 
-                                      blackPlayer = randomPlayer, 
-                                      currentPlayer = randomPlayer }
+        Just 1 -> return $ Just startState
+        Just 2 -> return $ Just startState { whitePlayer = randomPlayer, blackPlayer = humanPlayer }
+        Just 3 -> return $ Just startState { whitePlayer = heuristicPlayer, blackPlayer = humanPlayer }
+        Just 4 -> return $ Just startState { whitePlayer = lookaheadPlayer, blackPlayer = humanPlayer }
+        Just 5 -> return $ Just startState { whitePlayer = minimaxPlayer, 
+                                                blackPlayer = humanPlayer, 
+                                                currentPlayer = humanPlayer }
+        Just 6 -> do
+            setupTournament
+            return Nothing
         Just 9 -> exitSuccess
         _ -> do
             putStrLn "\nInvalid choice.\n"
             setup
+
+-- Prompt the user to set up AI benchmarking, then play the resulting tournament.
+--  Always has one player set to random (since the other AIs are deterministic it's
+--  not very interesting to do a multi-game tournament)
+setupTournament :: IO ()
+setupTournament = do
+    putStr "\nEnter the number of games to play (warning: 5+ games can be slow): "
+    numGames <- getLine
+    case readMaybe numGames of
+        Just n -> do
+            randomColor <- chooseRandomColor
+            case randomColor of
+                White -> do
+                    black <- chooseAI "Black"
+                    let gameState = startState {whitePlayer = randomPlayer, 
+                        blackPlayer = black, currentPlayer = black}
+                    putStrLn "\nPlaying tournament..."
+                    playTournament $ Tournament gameState gameState n 0 0 0
+                Black -> do
+                    white <- chooseAI "White"
+                    let gameState = startState {whitePlayer = white, 
+                        blackPlayer = randomPlayer, currentPlayer = randomPlayer}
+                    putStrLn "\nPlaying tournament..."
+                    playTournament $ Tournament gameState gameState n 0 0 0
+        Nothing -> do
+            putStrLn "\nInvalid input."
+            setupTournament
+
+chooseRandomColor :: IO Color 
+chooseRandomColor = do
+    putStrLn "\nChoose the color with a random player (Black moves first):"
+    putStrLn "\t 1. White"
+    putStrLn "\t 2. Black"
+    putStr "\nYour choice: "
+    line <- getLine 
+    case readMaybe line of
+        Just 1 -> return White 
+        Just 2 -> return Black 
+        _ -> do
+             putStrLn "\nInvalid input."
+             chooseRandomColor
+
+chooseAI :: String -> IO Player
+chooseAI color = do
+    putStrLn $ "\nChoose an AI for: " ++ color
+    putStrLn "\t 1. Random (fastest)"
+    putStrLn "\t 2. Heuristic"
+    putStrLn "\t 3. Heuristic with Lookahead"
+    putStrLn "\t 4. Minimax (slowest)"
+    putStr "\nYour choice: "
+    line <- getLine
+    case readMaybe line of
+        Just 1 -> return randomPlayer
+        Just 2 -> return heuristicPlayer
+        Just 3 -> return lookaheadPlayer
+        Just 4 -> return minimaxPlayer
+        _ -> do
+            putStrLn "\nInvalid choice.\n"
+            chooseAI color
 
 -- Print a board to the console.
 printBoard :: Board -> IO ()
@@ -61,14 +126,11 @@ play game@Game{board = board, currentTurn = turn, currentPlayer = player} = do
                 play $ nextState game nextMove
 
 -- Play an AI vs AI tournament. 
--- TODO: integrate this with the console menu.
---       for now, can just call this from ghci with a tournmanent state to do AI benchmarking.
 playTournament :: TournamentState -> IO ()
 playTournament TournamentOver{blackWon = bw, whiteWon = ww, ties = t} = do
     putStrLn $ "Tournament Finished. White Won: " ++ show ww ++ 
                 ". Black Won: " ++ show bw ++
                 ". Ties: " ++ show t
-
 
 playTournament tment@Tournament{game = 
         game@Game{board = board, currentPlayer = player, currentTurn = turn}} = do
@@ -77,21 +139,52 @@ playTournament tment@Tournament{game =
     let tournamentState = nextTournamentState tment gameState
     playTournament tournamentState
 
-testTment :: TournamentState
-testTment = Tournament {game = startState { whitePlayer = randomPlayer, 
-                                      blackPlayer = randomPlayer, 
-                                      currentPlayer = randomPlayer },
-                             startGame = startState { whitePlayer = randomPlayer, 
-                                      blackPlayer = randomPlayer, 
-                                      currentPlayer = randomPlayer },
-                             gamesLeft = 10,
-                             blackWon = 0,
-                             whiteWon = 0,
-                             ties = 0}
-
 -- Program entry point.
 main :: IO ()
 main = do
         putStrLn "\nWelcome to Othello\n"
         state <- setup
-        play state
+        case state of 
+            Just state -> do
+                play state
+            Nothing ->
+                return ()
+
+-- Some single-game tournaments for comparing the non-random AIs
+--  naming format is [black player]Vs[white player]. Play these from ghci
+--  with "playTournament [tournament name]"
+heuristicVsLookahead :: TournamentState
+heuristicVsLookahead = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{blackPlayer = heuristicPlayer,
+                    whitePlayer = lookaheadPlayer, currentPlayer = heuristicPlayer}
+
+lookaheadVsHeuristic :: TournamentState
+lookaheadVsHeuristic = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{whitePlayer = heuristicPlayer,
+                    blackPlayer = lookaheadPlayer, currentPlayer = lookaheadPlayer}
+
+heuristicVsMinimax :: TournamentState
+heuristicVsMinimax = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{whitePlayer = minimaxPlayer,
+                    blackPlayer = heuristicPlayer, currentPlayer = heuristicPlayer}
+
+minimaxVsHeuristic :: TournamentState
+minimaxVsHeuristic = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{whitePlayer = heuristicPlayer,
+                    blackPlayer = minimaxPlayer, currentPlayer = minimaxPlayer}
+
+minimaxVsLookahead :: TournamentState
+minimaxVsLookahead = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{whitePlayer = lookaheadPlayer,
+                    blackPlayer = minimaxPlayer, currentPlayer = minimaxPlayer}
+
+lookaheadVsMinimax :: TournamentState
+lookaheadVsMinimax = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{whitePlayer = minimaxPlayer,
+                    blackPlayer = lookaheadPlayer, currentPlayer = lookaheadPlayer}
