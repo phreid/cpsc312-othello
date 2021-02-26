@@ -54,7 +54,7 @@ heuristicPlayerDecision :: Board -> Color -> Move
 heuristicPlayerDecision board color = getValidMoves board color !! indexOfGreatestValue
   where indexOfGreatestValue = maxIndex (map fst (valueMoveTuple board color))
 
--- Taken from stackoverflow
+-- Taken from stackoverflow, grabs the index in which has the greatest move value
 maxIndex :: Ord a => [a] -> Int
 maxIndex xs = head $ filter ((== maximum xs) . (xs !!)) [0..]
 
@@ -66,14 +66,16 @@ valueMoveTuple board color =
      let currentVal = scoreBoard board color,
      let bonusCornerVal = cornerVal moves]
 
+-- Evaluates whether a move is a corner move
 isCorner :: Move -> Bool
 isCorner move
     | fst move == (0,0) = True
-    | fst move == (0,7) = True
-    | fst move == (7,0) = True
-    | fst move == (7,7) = True
+    | fst move == (0,maxCol) = True
+    | fst move == (maxCol,0) = True
+    | fst move == (maxCol,maxCol) = True
     | otherwise = False
 
+-- Provides a bonus value based on whether the move is a corner move
 cornerVal :: Move -> Int
 cornerVal move
     | isCorner move = 50
@@ -177,8 +179,6 @@ minimax board color depth
           value = maximum $
                     map (\move -> minimax (fromJust $ doMove board move) nextTurn (depth-1))
                         (getValidMoves board nextTurn)
-
-
 
 -- Board evaluation function for minimax. Gives high weight to moves in the corner,
 --  and also prefers boards where the player has lots of available moves. Also takes

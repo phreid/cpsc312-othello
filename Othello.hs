@@ -20,9 +20,13 @@ data GameState = Game {
 } | GameOver {board :: Board, winner :: Maybe Color}
 
 -- Set the game board size.
+maxRow :: Int
 maxRow = 7
+maxCol :: Int
 maxCol = 7
+midRow :: Int
 midRow = maxRow `div` 2
+midCol :: Int
 midCol = maxCol `div` 2
 
 -- For printing board pieces.
@@ -60,6 +64,7 @@ getSquare board (row, col)
     where found = filter (\((r, c), _) -> r == row && c == col) board
 
 -- Directions to search for flipped pieces when making a move
+searchDirs :: [(Int, Int)]
 searchDirs = [(-1, 0)  {-- up --},
               (1, 0)   {-- down --},
               (0, -1)  {-- left --},
