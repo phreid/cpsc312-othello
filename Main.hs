@@ -149,3 +149,42 @@ main = do
                 play state
             Nothing ->
                 return ()
+
+-- Some single-game tournaments for comparing the non-random AIs
+--  naming format is [black player]Vs[white player]. Play these from ghci
+--  with "playTournament [tournament name]"
+heuristicVsLookahead :: TournamentState
+heuristicVsLookahead = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{blackPlayer = heuristicPlayer,
+                    whitePlayer = lookaheadPlayer, currentPlayer = heuristicPlayer}
+
+lookaheadVsHeuristic :: TournamentState
+lookaheadVsHeuristic = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{whitePlayer = heuristicPlayer,
+                    blackPlayer = lookaheadPlayer, currentPlayer = lookaheadPlayer}
+
+heuristicVsMinimax :: TournamentState
+heuristicVsMinimax = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{whitePlayer = minimaxPlayer,
+                    blackPlayer = heuristicPlayer, currentPlayer = heuristicPlayer}
+
+minimaxVsHeuristic :: TournamentState
+minimaxVsHeuristic = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{whitePlayer = heuristicPlayer,
+                    blackPlayer = minimaxPlayer, currentPlayer = minimaxPlayer}
+
+minimaxVsLookahead :: TournamentState
+minimaxVsLookahead = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{whitePlayer = lookaheadPlayer,
+                    blackPlayer = minimaxPlayer, currentPlayer = minimaxPlayer}
+
+lookaheadVsMinimax :: TournamentState
+lookaheadVsMinimax = Tournament { game = game, startGame = game, gamesLeft = 1,
+                            blackWon = 0, whiteWon = 0, ties = 0}
+    where game = startState{whitePlayer = minimaxPlayer,
+                    blackPlayer = lookaheadPlayer, currentPlayer = lookaheadPlayer}
