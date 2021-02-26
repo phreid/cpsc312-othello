@@ -100,7 +100,7 @@ lookaheadDecision board color = possibleMoves !! indexOfGreatestValue
         indexOfGreatestValue = maxIndex (map snd (getMoveMaxVal moveAndValues color))
 
 -- Maximum score it could possibly attain
--- If a possible move includes a position around a corner, weight is deducted from the score 
+-- Also evaluates depending on the position of the move
 getMoveMaxVal :: [(Move, [Board])] -> Color -> [(Move, Int)]
 getMoveMaxVal moveB color = [ value | (x, y) <- moveB,
   let value = (x, getMaximumVal y color + checkPosition x color)]
