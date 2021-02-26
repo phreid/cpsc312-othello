@@ -100,14 +100,24 @@ lookaheadDecision board color = possibleMoves !! indexOfGreatestValue
         indexOfGreatestValue = maxIndex (map snd (getMoveMaxVal moveAndValues color))
 
 -- Maximum score it could possibly attain
--- If a possible move includes a corner position, more weight/value added 
+-- If a possible move includes a position around a corner, weight is deducted from the score 
 getMoveMaxVal :: [(Move, [Board])] -> Color -> [(Move, Int)]
-getMoveMaxVal moveB color = [if x  `elem` badMoves then (x, (getMaximumVal y color)-10)
-  else (x, getMaximumVal y color) | (x, y) <- moveB,
-  let badMoves = [((1,0), color),((1,1), color),((0,1),color),
+getMoveMaxVal moveB color = [ value | (x, y) <- moveB,
+  let value = (x, getMaximumVal y color + checkPosition x color)]
+
+-- Checks where the valid move is, and assigns more weight if a corner,  
+-- and subtracts if it's around the corner, otherwise just 0
+checkPosition :: Move -> Color -> Int
+checkPosition move color
+  | move `elem` corner = 10
+  | move `elem` badMove = -10
+  | otherwise = 0
+  where corner = [((0, maxCol), color), ((0,0), color), 
+                  ((maxRow, 0), color), ((maxRow, maxCol), color)]
+        badMove = [((1,0), color),((1,1), color),((0,1),color),
                   ((1,maxCol),color),((1,6),color),((0,6),color),
                   ((6,maxCol),color),((maxRow,6),color),((6,6),color),
-                  ((6,0),color),((6,1),color),((maxRow,1),color)]]
+                  ((6,0),color),((6,1),color),((maxRow,1),color)]
 
 -- Returns a list of all the possible board states per move
 moveBoardList :: Board -> Color -> [(Move, [Board])]
